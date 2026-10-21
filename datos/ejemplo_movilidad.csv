@@ -1,0 +1,121 @@
+id,distrito,medio_transporte,minutos_trayecto,dias_semana,satisfaccion
+1,Tetuán,A pie,15,5,7
+2,Retiro,Autobús,38,5,7
+3,Centro,Coche,39,3,6
+4,Vallecas,Metro,31,3,7
+5,Latina,Cercanías,27,4,4
+6,Latina,Metro,20,1,7
+7,Arganzuela,Metro,9,3,7
+8,Salamanca,A pie,5,3,8
+9,Vallecas,Metro,41,4,4
+10,Chamberí,Metro,26,5,6
+11,Arganzuela,Coche,23,3,7
+12,Salamanca,A pie,25,1,8
+13,Tetuán,Coche,41,2,4
+14,Chamberí,Autobús,36,2,7
+15,Chamberí,Autobús,50,5,4
+16,Chamberí,A pie,19,4,6
+17,Centro,Metro,40,3,7
+18,Centro,Metro,37,4,3
+19,Chamberí,A pie,29,1,8
+20,Vallecas,Cercanías,42,3,7
+21,Arganzuela,Cercanías,48,3,5
+22,Chamberí,A pie,17,3,7
+23,Tetuán,Metro,31,1,7
+24,Salamanca,Bicicleta,21,2,8
+25,Latina,Autobús,22,1,4
+26,Tetuán,A pie,19,3,10
+27,Centro,Autobús,39,3,6
+28,Chamberí,Bicicleta,28,4,8
+29,Retiro,Cercanías,45,1,4
+30,Latina,Metro,40,3,6
+31,Salamanca,A pie,16,4,5
+32,Arganzuela,Metro,12,1,8
+33,Retiro,Autobús,30,5,7
+34,Centro,Metro,43,5,7
+35,Vallecas,Bicicleta,20,3,6
+36,Latina,A pie,17,3,7
+37,Centro,Cercanías,56,1,4
+38,Tetuán,Cercanías,38,2,5
+39,Arganzuela,A pie,31,4,6
+40,Tetuán,Autobús,30,2,8
+41,Latina,Cercanías,48,5,7
+42,Salamanca,A pie,12,4,6
+43,Arganzuela,Autobús,38,4,4
+44,Tetuán,Metro,30,3,4
+45,Latina,A pie,13,1,9
+46,Vallecas,Coche,30,3,7
+47,Salamanca,Metro,32,1,8
+48,Vallecas,Metro,26,3,4
+49,Centro,Metro,30,4,7
+50,Latina,Cercanías,53,3,4
+51,Arganzuela,A pie,25,1,8
+52,Salamanca,Coche,48,5,3
+53,Latina,Autobús,28,2,6
+54,Retiro,Coche,16,2,7
+55,Latina,Metro,32,4,5
+56,Salamanca,Bicicleta,13,4,6
+57,Centro,A pie,21,4,6
+58,Centro,Autobús,30,4,6
+59,Retiro,Metro,35,1,9
+60,Tetuán,Bicicleta,21,5,8
+61,Vallecas,Autobús,44,4,5
+62,Arganzuela,Metro,42,4,5
+63,Tetuán,Autobús,20,3,2
+64,Chamberí,Autobús,38,1,4
+65,Arganzuela,Metro,33,1,6
+66,Latina,Metro,39,1,6
+67,Latina,Metro,36,2,5
+68,Centro,Metro,30,3,6
+69,Salamanca,A pie,31,1,6
+70,Latina,Coche,11,4,8
+71,Vallecas,Bicicleta,12,4,8
+72,Arganzuela,Bicicleta,25,4,7
+73,Centro,Metro,28,4,4
+74,Tetuán,Cercanías,53,5,5
+75,Retiro,Autobús,35,4,5
+76,Retiro,Coche,40,4,5
+77,Salamanca,Autobús,52,1,5
+78,Vallecas,Autobús,28,3,6
+79,Retiro,Coche,32,5,6
+80,Vallecas,Coche,32,5,5
+81,Retiro,Coche,40,5,7
+82,Arganzuela,Metro,26,1,7
+83,Latina,Coche,39,1,8
+84,Arganzuela,Coche,25,1,7
+85,Salamanca,Autobús,49,2,3
+86,Vallecas,Metro,34,5,7
+87,Centro,Metro,26,2,4
+88,Latina,Bicicleta,30,1,6
+89,Vallecas,Autobús,40,1,5
+90,Latina,Bicicleta,19,2,8
+91,Vallecas,Bicicleta,26,2,10
+92,Retiro,Metro,16,1,7
+93,Arganzuela,Cercanías,52,2,6
+94,Salamanca,Bicicleta,18,3,7
+95,Retiro,Autobús,39,3,4
+96,Latina,Autobús,36,5,4
+97,Latina,Coche,45,4,6
+98,Retiro,A pie,22,2,7
+99,Salamanca,Metro,20,5,5
+100,Chamberí,Cercanías,46,1,6
+101,Salamanca,Cercanías,46,3,5
+102,Salamanca,Coche,36,4,4
+103,Arganzuela,Autobús,42,3,3
+104,Salamanca,Autobús,50,4,4
+105,Arganzuela,Coche,57,1,4
+106,Latina,Cercanías,46,3,3
+107,Vallecas,Bicicleta,10,4,10
+108,Centro,Bicicleta,17,5,7
+109,Centro,A pie,10,3,8
+110,Centro,Metro,31,1,7
+111,Latina,Autobús,32,4,4
+112,Arganzuela,Coche,48,3,4
+113,Tetuán,A pie,11,4,9
+114,Arganzuela,Autobús,37,4,4
+115,Vallecas,Coche,43,3,4
+116,Salamanca,Autobús,43,5,4
+117,Vallecas,A pie,18,1,9
+118,Salamanca,Bicicleta,15,3,6
+119,Salamanca,A pie,11,3,9
+120,Arganzuela,Metro,23,3,5
