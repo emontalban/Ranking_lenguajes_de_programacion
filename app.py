@@ -1,117 +1,330 @@
 # ============================================================
-#  PLANTILLA DEL RETO · Mi primera app de datos con Streamlit
-#  Ejecutar:  streamlit run app.py
-#
-#  Cómo usarla:
-#   1. Edita SOLO el bloque "CONFIGURACIÓN" para conectar vuestro CSV.
-#   2. Cuando funcione, resolved los TODO (están ordenados por nivel).
-#   3. Ejecuta, guarda, recarga. Si algo falla, lee el mensaje de error.
+# APP DEL RETO · Adaptada siguiendo los pasos de app_ejemplo.py
+# Ejecutar: .\venv\Scripts\python.exe -m streamlit run app.py
+# 1. Configurar el CSV. 2. Comprobar los datos. 3. Usar los filtros.
 # ============================================================
+from pathlib import Path
+
 import pandas as pd
 import streamlit as st
 
-# ------------------------------------------------------------
-# CONFIGURACIÓN · cambiad estos valores
-# ------------------------------------------------------------
-TITULO = "🚲 Mi explorador de datos"
-DESCRIPCION = "Cambiad esta frase: ¿qué pregunta responde vuestra app?"
-FUENTE = "Datos de ejemplo (sintéticos). Indicad aquí de dónde vienen vuestros datos."
 
-# ¿Cómo carga la app los datos? Decididlo en equipo:
-#   "repo"  -> el CSV vive en la carpeta datos/ (la app arranca sola; recomendado si vais a publicarla)
-#   "subir" -> la persona usuaria sube el CSV con un botón cada vez que abre la app
-MODO_CARGA = "repo"
-RUTA_CSV = "datos/ejemplo_movilidad.csv"
+# ------------------------------------------------------------
+# CONFIGURACIÓN · como en app_ejemplo.py
+# ------------------------------------------------------------
+TITULO = "💻 Explorador de lenguajes de programación"
 
-# Muchos CSV españoles usan ";" como separador y "latin-1" como codificación.
-# Si veis una sola columna o caracteres raros (Ã±), cambiad estos dos valores.
+DESCRIPCION = (
+    "¿Cómo ha evolucionado el uso de los lenguajes de programación "
+    "a lo largo de los años disponibles, según las encuestas de Stack Overflow?"
+)
+FUENTE = (
+    "Fuente: encuestas anuales de Stack Overflow. "
+    "Los resultados representan a las personas encuestadas."
+)
+
+MODO_CARGA = "repo"  # "repo": CSV del proyecto; "subir": elegir un CSV
+CARPETA = Path(__file__).resolve().parent
+RUTA_CSV = CARPETA / "datos" / "lenguajes_por_año_pais_perfil.csv"
 SEPARADOR = ","
-CODIFICACION = "utf-8"
+CODIFICACION = "utf-8-sig"
+COLUMNA_FILTRO = "pais"
+COLUMNA_NUMERICA = "porcentaje"
+COLUMNA_GRUPO = "lenguaje"
+ANIO_INICIAL = 2017
 
-# Nombres EXACTOS de las columnas de vuestro CSV
-COLUMNA_FILTRO = "medio_transporte"   # categórica: con ella se filtra
-COLUMNA_NUMERICA = "satisfaccion"     # numérica: con ella se calculan medias
-COLUMNA_GRUPO = "distrito"            # categórica: con ella se agrupa el gráfico
+COLUMNAS = [
+    "año",
+    COLUMNA_FILTRO,
+    "perfil",
+    COLUMNA_GRUPO,
+    "personas",
+    "respuestas_grupo",
+    COLUMNA_NUMERICA
+]
+
 
 # ------------------------------------------------------------
-# A partir de aquí, el motor de la app
+# PÁGINA
 # ------------------------------------------------------------
-st.set_page_config(page_title="Mi app de datos", page_icon="📊", layout="wide")
+st.set_page_config(
+    page_title="Lenguajes de programación",
+    page_icon="💻",
+    layout="wide"
+)
 
 st.title(TITULO)
 st.write(DESCRIPCION)
+
 st.caption(FUENTE)
 
 
+# ------------------------------------------------------------
+# 1. CARGAR LOS DATOS
+# ------------------------------------------------------------
+# La fecha de modificación permite actualizar la caché
+# cuando sustituimos el CSV.
 @st.cache_data
-def leer_csv(origen):
+def leer_csv(origen, modificacion=None):
     return pd.read_csv(origen, sep=SEPARADOR, encoding=CODIFICACION)
 
 
-# 1. Cargar los datos
-if MODO_CARGA == "subir":
-    archivo = st.file_uploader("Sube un archivo CSV", type=["csv"])
-    if archivo is None:
-        st.info("Sube un CSV para empezar.")
+try:
+    if MODO_CARGA == "subir":
+        archivo = st.file_uploader("Sube el CSV de lenguajes resumido", type=["csv"])
+        if archivo is None:
+            st.info("Sube un CSV para empezar.")
+            st.stop()
+        df = leer_csv(archivo)
+    elif MODO_CARGA == "repo":
+        if not RUTA_CSV.exists():
+            st.error(f"No encuentro el CSV: {RUTA_CSV.name}. Guárdalo en datos/.")
+            st.stop()
+        df = leer_csv(str(RUTA_CSV), RUTA_CSV.stat().st_mtime)
+    else:
+        st.error('MODO_CARGA debe ser "repo" o "subir" en CONFIGURACIÓN.')
         st.stop()
-    df = leer_csv(archivo)
-else:
-    df = leer_csv(RUTA_CSV)
+except (OSError, UnicodeError, pd.errors.ParserError, pd.errors.EmptyDataError) as error:
+    st.error(f"No se ha podido leer el CSV. Revisa el separador y la codificación: {error}")
+    st.stop()
 
-# 2. Comprobar que las columnas de la configuración existen
-faltan = [c for c in (COLUMNA_FILTRO, COLUMNA_NUMERICA, COLUMNA_GRUPO) if c not in df.columns]
+
+# ------------------------------------------------------------
+# 2. COMPROBAR LAS COLUMNAS Y LOS DATOS
+# ------------------------------------------------------------
+faltan = [columna for columna in COLUMNAS if columna not in df.columns]
+
 if faltan:
-    st.error(f"Estas columnas no están en el CSV: {faltan}")
-    st.write("Las columnas disponibles son:", list(df.columns))
-    st.dataframe(df.head())
+    st.error(f"Faltan estas columnas: {faltan}")
+    st.write("Columnas disponibles:", list(df.columns))
     st.stop()
 
-if not pd.api.types.is_numeric_dtype(df[COLUMNA_NUMERICA]):
-    st.error(f"La columna '{COLUMNA_NUMERICA}' no es numérica. Elegid otra en la CONFIGURACIÓN.")
+# Usamos los nombres internos del resumen en el resto del motor.
+df = df.rename(columns={
+    COLUMNA_FILTRO: "pais",
+    COLUMNA_NUMERICA: "porcentaje",
+    COLUMNA_GRUPO: "lenguaje"
+})
+
+if df.empty:
+    st.warning("El archivo no contiene datos.")
     st.stop()
 
-# 3. Conocer los datos
-with st.expander("👀 Conoce tus datos", expanded=False):
-    st.write(f"Filas: {len(df)} · Columnas: {len(df.columns)}")
-    st.dataframe(df.head(10))
+# Comprobamos las columnas numéricas.
+for columna in ["año", "personas", "respuestas_grupo", "porcentaje"]:
+    df[columna] = pd.to_numeric(df[columna], errors="coerce")
 
-# 4. Filtro en la barra lateral
-st.sidebar.header("Filtros")
-opciones = sorted(df[COLUMNA_FILTRO].dropna().unique())
-seleccion = st.sidebar.multiselect(COLUMNA_FILTRO, options=opciones, default=opciones)
+if df[["año", "pais", "perfil", "lenguaje", "personas", "respuestas_grupo", "porcentaje"]].isna().any().any():
+    st.error("Hay valores vacíos o números incorrectos. Revisa el CSV.")
+    st.stop()
 
-# TODO (nivel 2): añadid un segundo filtro con otra columna categórica
-#   y combinadlo con el primero usando &  (mirad app.py de la demo Pulso Digital).
+df["año"] = df["año"].astype(int)
+# Excluimos las ediciones antiguas aunque se vuelva a cargar el CSV original.
+df = df[df["año"] >= ANIO_INICIAL].copy()
+if df.empty:
+    st.warning(f"No hay datos desde {ANIO_INICIAL} en el archivo.")
+    st.stop()
 
-filtrado = df[df[COLUMNA_FILTRO].isin(seleccion)]
+st.caption(f"Periodo disponible: {df['año'].min()}–{df['año'].max()}.")
+
+if df.duplicated(["año", "pais", "perfil", "lenguaje"]).any():
+    st.error("Hay filas repetidas para el mismo año, país, perfil y lenguaje.")
+    st.stop()
+
+
+# ------------------------------------------------------------
+# 3. CONOCER LOS DATOS
+# ------------------------------------------------------------
+with st.expander("👀 Conoce tus datos"):
+    st.write(
+        "Los datos originales se agrupan por año, país y perfil. "
+        "Los filtros permiten elegir qué países y perfiles reúne el ranking."
+    )
+    st.write(
+        f"Filas: {len(df):,} · "
+        f"Años disponibles: {df['año'].nunique()}"
+    )
+    st.dataframe(df.head(10), hide_index=True)
+
+
+# ------------------------------------------------------------
+# 4. FILTROS EN LA BARRA LATERAL
+# ------------------------------------------------------------
+st.sidebar.header("🔎 Filtros")
+
+# Mostramos primero el año más reciente.
+años = sorted(df["año"].unique().tolist(), reverse=True)
+año = st.sidebar.selectbox("Año del ranking", años)
+
+paises = st.sidebar.multiselect(
+    "Países", options=sorted(df["pais"].unique().tolist()),
+    help="Deja la selección vacía para incluir todos los países."
+)
+perfiles = st.sidebar.multiselect(
+    "Perfiles", options=sorted(df["perfil"].unique().tolist()),
+    help="Deja la selección vacía para incluir todos los perfiles."
+)
+st.sidebar.caption("Sin selección en un filtro se incluyen todas sus opciones.")
+
+# Aplicamos ambos filtros antes de sumar personas y respuestas.
+datos_grupo = df.copy()
+if paises:
+    datos_grupo = datos_grupo[datos_grupo["pais"].isin(paises)]
+if perfiles:
+    datos_grupo = datos_grupo[datos_grupo["perfil"].isin(perfiles)]
+
+if datos_grupo.empty:
+    st.warning("No hay datos para estos países y perfiles. Cambia los filtros.")
+    st.stop()
+
+contexto = (
+    (", ".join(paises) if paises else "Todos los países")
+    + " · "
+    + (", ".join(perfiles) if perfiles else "Todos los perfiles")
+)
+# Cada grupo repite su denominador en todos sus lenguajes.
+# Sumamos una sola vez cada grupo y recalculamos el porcentaje anual.
+totales = (
+    datos_grupo.drop_duplicates(["año", "pais", "perfil"])
+    .groupby("año")["respuestas_grupo"].sum()
+)
+historico = datos_grupo.groupby(["año", "lenguaje"], as_index=False)["personas"].sum()
+historico["respuestas_grupo"] = historico["año"].map(totales)
+historico["porcentaje"] = (
+    100 * historico["personas"] / historico["respuestas_grupo"]
+).round(2)
+filtrado = historico[historico["año"] == año].copy()
 
 if filtrado.empty:
-    st.warning("No hay datos con esta selección. Marcad alguna opción más.")
+    st.warning("No hay datos para esta selección.")
     st.stop()
 
-# 5. Indicadores
-st.subheader("Resumen")
-col1, col2 = st.columns(2)
-col1.metric("Registros", len(filtrado))
-col2.metric(f"Media de {COLUMNA_NUMERICA}", f"{filtrado[COLUMNA_NUMERICA].mean():,.1f}")
-
-# TODO (nivel 1): cambiad las etiquetas de los indicadores por textos que entienda cualquiera
-# TODO (nivel 2): añadid un tercer indicador (máximo, mínimo, suma, % de algo...)
-
-# 6. Gráfico
-st.subheader(f"{COLUMNA_NUMERICA} medio por {COLUMNA_GRUPO}")
-resumen = (
-    filtrado.groupby(COLUMNA_GRUPO)[COLUMNA_NUMERICA]
-    .mean()
-    .sort_values(ascending=False)
+# ------------------------------------------------------------
+# 5. INDICADORES · mejoras de nivel 1 y 2
+# ------------------------------------------------------------
+ranking = filtrado.sort_values(
+    ["porcentaje", "lenguaje"],
+    ascending=[False, True]
 )
-st.bar_chart(resumen, sort=False)  # sort=False respeta nuestro orden (de mayor a menor)
 
-# TODO (nivel 2): añadid un segundo gráfico (st.line_chart si tenéis fechas,
-#   st.scatter_chart para relacionar dos columnas numéricas...)
-# TODO (nivel 3): escribid con st.write una frase que explique qué se ve en el gráfico
-#   y que cambie con los filtros (por ejemplo, qué grupo tiene la media más alta).
+lider = ranking.iloc[0]
 
-# 7. Tabla con los datos filtrados
-with st.expander("Ver los datos filtrados"):
-    st.dataframe(filtrado, hide_index=True)
+# Este total se repite en cada lenguaje del mismo grupo.
+# Lo tomamos una sola vez: NO sumamos todas las filas.
+total_personas = int(ranking["respuestas_grupo"].iloc[0])
+
+st.subheader(f"Resumen de {año}")
+st.caption(contexto)
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Personas que respondieron", f"{total_personas:,}")
+col2.metric("Lenguaje líder del grupo", lider["lenguaje"])
+col3.metric("Uso del lenguaje líder", f"{lider['porcentaje']:.2f} %")
+
+st.write(
+    f"En este grupo, **{lider['lenguaje']}** encabeza el ranking "
+    f"con un **{lider['porcentaje']:.2f} %** de uso."
+)
+
+if total_personas < 30:
+    st.caption(
+        "El grupo tiene menos de 30 respuestas: "
+        "los resultados pueden variar mucho con pocas personas."
+    )
+
+
+# ------------------------------------------------------------
+# 6. GRÁFICOS · ranking y evolución (mejora de nivel 2)
+# ------------------------------------------------------------
+st.subheader("📊 Los 10 lenguajes con mayor porcentaje de uso")
+
+top_10 = ranking.head(10).set_index("lenguaje")[["porcentaje"]]
+top_10 = top_10.rename(columns={"porcentaje": "Uso (%)"})
+
+st.bar_chart(top_10, sort=False)
+
+st.caption(
+    "Cada barra muestra el porcentaje de personas del grupo "
+    "que seleccionó ese lenguaje. Una persona puede seleccionar varios, "
+    "por lo que los porcentajes no tienen que sumar 100 %."
+)
+
+
+# ------------------------------------------------------------
+# Segundo gráfico: evolución durante los años disponibles
+# ------------------------------------------------------------
+st.subheader("📈 Evolución del uso")
+
+st.write(
+    "Este gráfico utiliza los países y perfiles seleccionados "
+    "durante todos los años disponibles."
+)
+
+opciones = sorted(historico["lenguaje"].unique().tolist())
+
+# Seleccionamos inicialmente los tres primeros del ranking actual.
+seleccion = st.multiselect(
+    "Lenguajes que quieres comparar",
+    options=opciones,
+    default=ranking["lenguaje"].head(3).tolist()
+)
+
+if not seleccion:
+    st.info("Selecciona al menos un lenguaje para ver su evolución.")
+else:
+    datos_evolucion = historico[
+        historico["lenguaje"].isin(seleccion)
+    ]
+
+    # Una columna por lenguaje y una fila por año.
+    evolucion = datos_evolucion.pivot(
+        index="año",
+        columns="lenguaje",
+        values="porcentaje"
+    )
+
+    # Conservamos los años sin datos como valores ausentes.
+    # No los sustituimos por cero.
+    evolucion = evolucion.reindex(sorted(df["año"].unique()))
+
+    # Convertimos los años en etiquetas para mostrarlos sin decimales.
+    evolucion.index = evolucion.index.astype(str)
+    evolucion.index.name = "Año"
+
+    st.line_chart(evolucion)
+
+    with st.expander("Ver los porcentajes de la evolución"):
+        st.dataframe(evolucion)
+
+st.caption(
+    "Los valores del gráfico están expresados en porcentaje. "
+    "Un dato ausente no significa un uso del 0 %."
+)
+
+
+# ------------------------------------------------------------
+# 7. TABLA FILTRADA
+# ------------------------------------------------------------
+with st.expander("📋 Ver los datos del ranking"):
+    st.dataframe(
+        ranking[
+            ["año", "lenguaje", "personas", "porcentaje"]
+        ],
+        hide_index=True
+    )
+
+
+# ------------------------------------------------------------
+# 8. FUENTE Y CONTEXTO
+# ------------------------------------------------------------
+st.markdown(
+    "**Fuente:** [Stack Overflow Developer Survey]"
+    "(https://survey.stackoverflow.co/)"
+)
+
+st.caption(
+    "La encuesta incluye lenguajes de programación, scripting y marcado. "
+    "Las opciones y las personas participantes pueden cambiar entre años; "
+    "la comparación es descriptiva."
+)
